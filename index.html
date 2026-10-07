@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exaustão de Emergência</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
+header{background:#172033;color:white;padding:28px;text-align:center}
+header h1{margin:0 0 8px;font-size:28px}
+header p{margin:0;color:#cbd5e1}
+.container{max-width:1050px;margin:28px auto;padding:0 18px}
+.status{background:white;border-radius:16px;padding:25px;text-align:center;box-shadow:0 5px 18px #0001;margin-bottom:22px}
+.status h2{margin:0 0 12px}
+#status{font-size:30px;font-weight:bold;padding:16px;border-radius:12px}
+.off{background:#dcfce7;color:#166534}
+.on{background:#fee2e2;color:#b91c1c}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{background:white;border-radius:16px;padding:22px;box-shadow:0 5px 18px #0001}
+.card h3{margin-top:0}
+.value{font-size:42px;font-weight:bold;text-align:center;margin:18px 0}
+.normal{color:#16a34a}.critical{color:#dc2626}.maintenance{color:#d97706}
+button{width:100%;padding:12px;border:0;border-radius:9px;background:#172033;color:white;font-size:16px;cursor:pointer}
+button:hover{background:#334155}
+.info{margin-top:22px;background:white;border-radius:16px;padding:22px;box-shadow:0 5px 18px #0001}
+.info code{font-size:18px;background:#f1f5f9;padding:8px 12px;border-radius:8px}
+.log{margin-top:18px;font-size:14px}
+@media(max-width:750px){.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>Sistema de Exaustão de Emergência</h1>
+<p>Dashboard de monitoramento do rack de servidores</p>
+</header>
+
+<main class="container">
+<section class="status">
+<h2>Status da Exaustão</h2>
+<div id="status" class="off">EXAUSTÃO DESLIGADA</div>
+</section>
+
+<section class="cards">
+<div class="card">
+<h3>🔥 Sensor de Fumaça (A)</h3>
+<div id="aValue" class="value normal">0</div>
+<p id="aText">Ambiente normal</p>
+<button onclick="toggleA()">Alterar sensor</button>
+</div>
+
+<div class="card">
+<h3>🌡️ Sensor de Temperatura (B)</h3>
+<div id="bValue" class="value normal">0</div>
+<p id="bText">Temperatura normal</p>
+<button onclick="toggleB()">Alterar sensor</button>
+</div>
+
+<div class="card">
+<h3>🔧 Chave de Manutenção (C)</h3>
+<div id="cValue" class="value normal">0</div>
+<p id="cText">Operação automática</p>
+<button onclick="toggleC()">Alterar chave</button>
+</div>
+</section>
+
+<section class="info">
+<h2>Regra de Negócio</h2>
+<p>A exaustão liga imediatamente quando existe fumaça. Sem fumaça, ela liga quando a temperatura está crítica e a manutenção está desligada.</p>
+<p><code>S = A OR (B AND NOT C)</code></p>
+<div class="log"><strong>Última decisão:</strong> <span id="reason">Nenhuma condição de emergência.</span></div>
+</section>
+</main>
+
+<script>
+let A=0, B=0, C=0;
+
+function atualizar(){
+    const S = A === 1 || (B === 1 && C === 0);
+    document.getElementById("aValue").textContent=A;
+    document.getElementById("bValue").textContent=B;
+    document.getElementById("cValue").textContent=C;
+
+    const av=document.getElementById("aValue");
+    const bv=document.getElementById("bValue");
+    const cv=document.getElementById("cValue");
+    av.className="value "+(A?"critical":"normal");
+    bv.className="value "+(B?"critical":"normal");
+    cv.className="value "+(C?"maintenance":"normal");
+
+    document.getElementById("aText").textContent=A?"FUMAÇA DETECTADA":"Ambiente normal";
+    document.getElementById("bText").textContent=B?"TEMPERATURA CRÍTICA":"Temperatura normal";
+    document.getElementById("cText").textContent=C?"MANUTENÇÃO ATIVADA":"Operação automática";
+
+    const status=document.getElementById("status");
+    status.textContent=S?"EXAUSTÃO LIGADA":"EXAUSTÃO DESLIGADA";
+    status.className=S?"on":"off";
+
+    let reason="Nenhuma condição de emergência.";
+    if(A) reason="Fumaça detectada: prioridade absoluta.";
+    else if(B && !C) reason="Temperatura crítica com operação automática.";
+    else if(B && C) reason="Temperatura crítica, mas o modo de manutenção inibiu o acionamento.";
+    document.getElementById("reason").textContent=reason;
+}
+function toggleA(){A=A?0:1; atualizar()}
+function toggleB(){B=B?0:1; atualizar()}
+function toggleC(){C=C?0:1; atualizar()}
+atualizar();
+</script>
+</body>
+</html>
